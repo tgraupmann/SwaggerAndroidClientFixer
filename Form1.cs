@@ -92,6 +92,15 @@ namespace SwaggerAndroidClientFixer
             }
         }
 
+        private void SetStatus(string text)
+        {
+            Action action = () =>
+                {
+                    lblStatus.Text = text;
+                };
+            this.Invoke(action);
+        }
+
         private void ProcessFile(FileInfo fileInfo)
         {
             if (_mShouldExit)
@@ -101,22 +110,44 @@ namespace SwaggerAndroidClientFixer
 
             if (!fileInfo.Exists)
             {
-                lblStatus.Text = string.Format("Status: File does not exist: {0}", fileInfo.Name);
+                SetStatus(string.Format("Status: File does not exist: {0}", fileInfo.Name));
                 return;
             }
 
-            lblStatus.Text = string.Format("Status: Reading: {0}", fileInfo.Name);
+            SetStatus(string.Format("Status: Reading: {0}", fileInfo.Name));
             using (StreamReader reader = new StreamReader(fileInfo.FullName))
             {
+                String previousLine = null;
                 String line = null;
                 do
                 {
+                    previousLine = line;
                     line = reader.ReadLine();
+                    const string TOKEN_PUBLIC_ENUM = "public enum ";
+                    const string TOKEN_CURLY_BRACE = " {";
+                    if (null != previousLine &&
+                        previousLine.Contains(TOKEN_PUBLIC_ENUM) &&
+                        null != line &&
+                        line.Contains(","))
+                    {
+                        int startOfClass = previousLine.IndexOf(TOKEN_PUBLIC_ENUM) + TOKEN_PUBLIC_ENUM.Length;
+                        string subString1 = previousLine.Substring(startOfClass);
+                        if (null != subString1 &&
+                            subString1.Contains(TOKEN_CURLY_BRACE))
+                        {
+                            int curlyIndex = subString1.IndexOf(TOKEN_CURLY_BRACE);
+                            string className = subString1.Substring(0, curlyIndex);
+                            if (!string.IsNullOrEmpty(className))
+                            {
+
+                            }
+                        }
+                    }
                 }
                 while (line != null);
             }
 
-            lblStatus.Text = string.Format("Status: Processed: {0}", fileInfo.Name);
+            SetStatus(string.Format("Status: Processed: {0}", fileInfo.Name));
         }
 
         private void btnProcess_Click(object sender, EventArgs e)
@@ -139,8 +170,7 @@ namespace SwaggerAndroidClientFixer
                         }
                     }
                 }
-                lblStatus.Text = "Status: DONE";
-                lblStatus.Invalidate();
+                SetStatus("Status: DONE");
             });
             Thread thread = new Thread(threadStart);
             thread.Start();
