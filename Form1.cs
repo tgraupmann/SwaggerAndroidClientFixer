@@ -38,16 +38,21 @@ namespace SwaggerAndroidClientFixer
             }
         }
 
+        private void CacheFolder()
+        {
+            Microsoft.Win32.RegistryKey key;
+            key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(KEY_APP);
+            key.SetValue(KEY_APP_DEFAULT_FOLDER, txtFolder.Text);
+            key.Close();
+        }
+
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             folderBrowserDialog1.SelectedPath = txtFolder.Text;
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
             {
                 txtFolder.Text = folderBrowserDialog1.SelectedPath;
-                Microsoft.Win32.RegistryKey key;
-                key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(KEY_APP);
-                key.SetValue(KEY_APP_DEFAULT_FOLDER, folderBrowserDialog1.SelectedPath);
-                key.Close();
+                CacheFolder();
             }
 
             CheckIsReady();
@@ -156,6 +161,8 @@ namespace SwaggerAndroidClientFixer
             {
                 return;
             }
+
+            CacheFolder();
 
             ThreadStart threadStart = new ThreadStart(() =>
             {
