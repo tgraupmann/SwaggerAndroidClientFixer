@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace SwaggerAndroidClientFixer
@@ -9,6 +10,8 @@ namespace SwaggerAndroidClientFixer
         private const string KEY_APP = "SWAGGER_IO_FIXER";
         private const string KEY_APP_DEFAULT_FOLDER = "SWAGGER_IO_FIXER_DEFAULT_FOLDER";
 
+        private bool _mShouldExit = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -16,6 +19,7 @@ namespace SwaggerAndroidClientFixer
 
         private void btnExit_Click(object sender, EventArgs e)
         {
+            _mShouldExit = true;
             Application.Exit();
         }
 
@@ -69,13 +73,77 @@ namespace SwaggerAndroidClientFixer
             CheckIsReady();
         }
 
+        private void FindAllChildren(DirectoryInfo folder, string extension, Action<FileInfo> action)
+        {
+            if (folder.Exists)
+            {
+                foreach (FileInfo fileInfo in folder.GetFiles("*.java"))
+                {
+                    action(fileInfo);
+                }
+                foreach (DirectoryInfo child in folder.GetDirectories())
+                {
+                    if (child.Name == ".")
+                    {
+                        continue;
+                    }
+                    FindAllChildren(child, extension, action);
+                }
+            }
+        }
+
+        private void ProcessFile(FileInfo fileInfo)
+        {
+            if (_mShouldExit)
+            {
+                return;
+            }
+
+            if (!fileInfo.Exists)
+            {
+                lblStatus.Text = string.Format("Status: File does not exist: {0}", fileInfo.Name);
+                return;
+            }
+
+            lblStatus.Text = string.Format("Status: Reading: {0}", fileInfo.Name);
+            using (StreamReader reader = new StreamReader(fileInfo.FullName))
+            {
+                String line = null;
+                do
+                {
+                    line = reader.ReadLine();
+                }
+                while (line != null);
+            }
+
+            lblStatus.Text = string.Format("Status: Processed: {0}", fileInfo.Name);
+        }
+
         private void btnProcess_Click(object sender, EventArgs e)
         {
             if (!CheckIsReady())
             {
                 return;
             }
-            lblStatus.Text = "Status: DONE";
+
+            ThreadStart threadStart = new ThreadStart(() =>
+            {
+                DirectoryInfo root = new DirectoryInfo(txtFolder.Text);
+                if (root.Exists)
+                {
+                    foreach (DirectoryInfo child in root.GetDirectories())
+                    {
+                        if (child.Name == "src")
+                        {
+                            FindAllChildren(child, "java", ProcessFile);
+                        }
+                    }
+                }
+                lblStatus.Text = "Status: DONE";
+                lblStatus.Invalidate();
+            });
+            Thread thread = new Thread(threadStart);
+            thread.Start();
         }
 
         private void txtFolder_TextChanged(object sender, EventArgs e)
