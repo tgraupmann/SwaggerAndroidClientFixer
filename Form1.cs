@@ -109,7 +109,7 @@ namespace SwaggerAndroidClientFixer
         string GetNamedValue(int val)
         {
             string result = HumanFriendlyInteger.IntegerToWritten(val);
-            return result.Replace(" ", "_").ToUpper();
+            return result.Replace(" ", "_");
         }
 
         private void ProcessFile(FileInfo fileInfo)
@@ -184,6 +184,19 @@ namespace SwaggerAndroidClientFixer
                                     if (!string.IsNullOrEmpty(replaceLine))
                                     {
                                         replaceLine += ";\r\n";
+                                        replaceLine += "\t\tprivate int value;\r\n";
+                                        replaceLine +=
+                                            string.Format("\t\tprivate {0}(int value) {{\r\n",
+                                            className);
+                                        replaceLine += "\t\t\tthis.value = value;\r\n";
+                                        replaceLine += "\t\t}\r\n";
+                                        replaceLine += "\t\tpublic int getValue() {\r\n";
+                                        replaceLine += "\t\t\treturn value;\r\n";
+                                        replaceLine += "\t\t}\r\n";
+                                        string debug = string.Format("Status: Processing: {0}\r\n" ,fileInfo.Name);
+                                        debug += replaceLine.Replace("\t", "    ");
+                                        SetStatus(debug);
+                                        Thread.Sleep(1000);
                                     }
                                 }
                                 catch (FormatException e)

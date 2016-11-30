@@ -69,7 +69,7 @@
             // btnExit
             // 
             this.btnExit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExit.Location = new System.Drawing.Point(210, 274);
+            this.btnExit.Location = new System.Drawing.Point(312, 368);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(133, 53);
             this.btnExit.TabIndex = 0;
@@ -103,7 +103,7 @@
             // 
             this.lblStatus.Location = new System.Drawing.Point(13, 213);
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(330, 44);
+            this.lblStatus.Size = new System.Drawing.Size(330, 139);
             this.lblStatus.TabIndex = 4;
             this.lblStatus.Text = "Status:";
             // 
@@ -111,7 +111,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(356, 339);
+            this.ClientSize = new System.Drawing.Size(458, 433);
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.btnProcess);
             this.Controls.Add(this.txtFolder);
