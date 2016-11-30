@@ -126,6 +126,8 @@ namespace SwaggerAndroidClientFixer
             }
 
             SetStatus(string.Format("Status: Reading: {0}", fileInfo.Name));
+            string originalContent = string.Empty;
+            string newContent = string.Empty;
             using (StreamReader reader = new StreamReader(fileInfo.FullName))
             {
                 String previousLine = null;
@@ -134,6 +136,13 @@ namespace SwaggerAndroidClientFixer
                 {
                     previousLine = line;
                     line = reader.ReadLine();
+
+                    if (null != line)
+                    {
+                        originalContent += line;
+                        originalContent += Environment.NewLine;
+                    }
+
                     string replaceLine = null;
 
                     // ref: https://github.com/swagger-api/swagger-codegen/issues/4278
@@ -193,10 +202,10 @@ namespace SwaggerAndroidClientFixer
                                         replaceLine += "\t\tpublic int getValue() {\r\n";
                                         replaceLine += "\t\t\treturn value;\r\n";
                                         replaceLine += "\t\t}\r\n";
-                                        string debug = string.Format("Status: Processing: {0}\r\n" ,fileInfo.Name);
+                                        string debug = string.Format("Status: Processing: {0}\r\n", fileInfo.Name);
                                         debug += replaceLine.Replace("\t", "    ");
                                         SetStatus(debug);
-                                        Thread.Sleep(1000);
+                                        //Thread.Sleep(1000);
                                     }
                                 }
                                 catch (FormatException e)
@@ -207,8 +216,37 @@ namespace SwaggerAndroidClientFixer
                             }
                         }
                     }
+
+                    if (null != replaceLine)
+                    {
+                        newContent += replaceLine;
+                    }
+                    else if (null != line)
+                    {
+                        newContent += line;
+                        newContent += Environment.NewLine;
+                    }
                 }
                 while (line != null);
+            }
+
+            if (originalContent != null &&
+                newContent != null &&
+                !originalContent.Equals(newContent))
+            {
+                string tempFile = Directory.GetCurrentDirectory() + Path.PathSeparator + fileInfo.Name;
+
+                using (StreamWriter sw = new StreamWriter(tempFile + ".a"))
+                {
+                    sw.Write(originalContent);
+                    sw.Flush();
+                }
+
+                using (StreamWriter sw = new StreamWriter(tempFile + ".b"))
+                {
+                    sw.Write(newContent);
+                    sw.Flush();
+                }
             }
 
             SetStatus(string.Format("Status: Processed: {0}", fileInfo.Name));
