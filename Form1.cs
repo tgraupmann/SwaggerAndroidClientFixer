@@ -106,6 +106,12 @@ namespace SwaggerAndroidClientFixer
             this.Invoke(action);
         }
 
+        string GetNamedValue(int val)
+        {
+            string result = HumanFriendlyInteger.IntegerToWritten(val);
+            return result.Replace(" ", "_").ToUpper();
+        }
+
         private void ProcessFile(FileInfo fileInfo)
         {
             if (_mShouldExit)
@@ -128,6 +134,9 @@ namespace SwaggerAndroidClientFixer
                 {
                     previousLine = line;
                     line = reader.ReadLine();
+                    string replaceLine = null;
+
+                    // ref: https://github.com/swagger-api/swagger-codegen/issues/4278
                     const string TOKEN_PUBLIC_ENUM = "public enum ";
                     const string TOKEN_CURLY_BRACE = " {";
                     if (null != previousLine &&
@@ -144,7 +153,44 @@ namespace SwaggerAndroidClientFixer
                             string className = subString1.Substring(0, curlyIndex);
                             if (!string.IsNullOrEmpty(className))
                             {
-
+                                try
+                                {
+                                    replaceLine = string.Empty;
+                                    string[] numbers = line.Split(new[] { ',' });
+                                    int i = 0;
+                                    foreach (string number in numbers)
+                                    {
+                                        if (!string.IsNullOrEmpty(number) &&
+                                            !string.IsNullOrEmpty(number.Trim()))
+                                        {
+                                            int val;
+                                            if (!int.TryParse(number, out val))
+                                            {
+                                                throw new FormatException();
+                                            }
+                                            string namedVal = GetNamedValue(val);
+                                            if (i == 0)
+                                            {
+                                                replaceLine = "\t\t";
+                                            }
+                                            else
+                                            {
+                                                replaceLine += ", ";
+                                            }
+                                            ++i;
+                                            replaceLine += string.Format("{0}({1})", namedVal, val);
+                                        }
+                                    }
+                                    if (!string.IsNullOrEmpty(replaceLine))
+                                    {
+                                        replaceLine += ";\r\n";
+                                    }
+                                }
+                                catch (FormatException e)
+                                {
+                                    //skip
+                                    replaceLine = null;
+                                }
                             }
                         }
                     }
