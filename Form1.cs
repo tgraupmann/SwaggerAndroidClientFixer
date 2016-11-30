@@ -145,9 +145,66 @@ namespace SwaggerAndroidClientFixer
 
                     string replaceLine = null;
 
-                    // ref: https://github.com/swagger-api/swagger-codegen/issues/4278
                     const string TOKEN_PUBLIC_ENUM = "public enum ";
-                    const string TOKEN_CURLY_BRACE = " {";
+                    const string TOKEN_SPACE_CURLY_BRACE = " {";
+                    const string TOKEN_OPEN_PARENS = "(";
+                    const string TOKEN_OPEN_TEMPLATE = "<";
+                    const string TOKEN_OBJECT = "Object";
+                    const string TOKEN_OPEN_PARENS_OBJECT = "(Object";
+                    const string TOKEN_OPEN_TEMPLATE_OBJECT = "<Object";
+                    const string TOKEN_OBJECT_EQUALS_OBJECT = "Object object = (Object)";
+
+                    // ref: https://github.com/swagger-api/swagger-codegen/issues/4279
+                    if (null != line &&
+                        line.Contains(TOKEN_OBJECT) &&
+                        !line.Contains(TOKEN_OBJECT_EQUALS_OBJECT))
+                    {
+                        for (int i = 0; i < line.Length; ++i)
+                        {
+                            if (char.IsWhiteSpace(line[i]))
+                            {
+                                continue;
+                            }
+                            string substring1 = line.Substring(i);
+                            if (substring1.StartsWith(TOKEN_OBJECT))
+                            {
+                                string substring2 = substring1.Substring(TOKEN_OBJECT.Length);
+                                if (char.IsWhiteSpace(substring2[0]))
+                                {
+                                    int objectIndex = line.IndexOf(TOKEN_OBJECT);
+                                    replaceLine = line.Substring(0, objectIndex);
+                                    replaceLine += "java.lang.";
+                                    replaceLine += line.Substring(objectIndex);
+                                    replaceLine += Environment.NewLine;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        if (line.Contains(TOKEN_OPEN_PARENS_OBJECT))
+                        {
+                            int startOfSymbolObject = line.IndexOf(TOKEN_OPEN_PARENS_OBJECT);
+                            replaceLine = line.Substring(0, startOfSymbolObject);
+                            replaceLine += TOKEN_OPEN_PARENS;
+                            replaceLine += "java.lang.";
+                            replaceLine += line.Substring(startOfSymbolObject + TOKEN_OPEN_PARENS.Length);
+                            replaceLine += Environment.NewLine;
+                        }
+                        if (line.Contains(TOKEN_OPEN_TEMPLATE_OBJECT))
+                        {
+                            int startOfSymbolObject = line.IndexOf(TOKEN_OPEN_TEMPLATE_OBJECT);
+                            replaceLine = line.Substring(0, startOfSymbolObject);
+                            replaceLine += TOKEN_OPEN_TEMPLATE;
+                            replaceLine += "java.lang.";
+                            replaceLine += line.Substring(startOfSymbolObject + TOKEN_OPEN_TEMPLATE.Length);
+                            replaceLine += Environment.NewLine;
+                        }
+                    }
+                    
+                    // ref: https://github.com/swagger-api/swagger-codegen/issues/4278
                     if (null != previousLine &&
                         previousLine.Contains(TOKEN_PUBLIC_ENUM) &&
                         null != line &&
@@ -156,9 +213,9 @@ namespace SwaggerAndroidClientFixer
                         int startOfClass = previousLine.IndexOf(TOKEN_PUBLIC_ENUM) + TOKEN_PUBLIC_ENUM.Length;
                         string subString1 = previousLine.Substring(startOfClass);
                         if (null != subString1 &&
-                            subString1.Contains(TOKEN_CURLY_BRACE))
+                            subString1.Contains(TOKEN_SPACE_CURLY_BRACE))
                         {
-                            int curlyIndex = subString1.IndexOf(TOKEN_CURLY_BRACE);
+                            int curlyIndex = subString1.IndexOf(TOKEN_SPACE_CURLY_BRACE);
                             string className = subString1.Substring(0, curlyIndex);
                             if (!string.IsNullOrEmpty(className))
                             {
@@ -238,15 +295,25 @@ namespace SwaggerAndroidClientFixer
 
                 if (debug)
                 {
-                    string tempFile = Directory.GetCurrentDirectory() + Path.PathSeparator + fileInfo.Name;
-
-                    using (StreamWriter sw = new StreamWriter(tempFile + ".a"))
+                    string tempFolderA = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "a";
+                    if (!Directory.Exists(tempFolderA))
+                    {
+                        Directory.CreateDirectory(tempFolderA);
+                    }
+                    string tempFileA = tempFolderA + Path.DirectorySeparatorChar + fileInfo.Name;
+                    using (StreamWriter sw = new StreamWriter(tempFileA))
                     {
                         sw.Write(originalContent);
                         sw.Flush();
                     }
 
-                    using (StreamWriter sw = new StreamWriter(tempFile + ".b"))
+                    string tempFolderB = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "b";
+                    if (!Directory.Exists(tempFolderB))
+                    {
+                        Directory.CreateDirectory(tempFolderB);
+                    }
+                    string tempFileB = tempFolderB + Path.DirectorySeparatorChar + fileInfo.Name;
+                    using (StreamWriter sw = new StreamWriter(tempFileB))
                     {
                         sw.Write(newContent);
                         sw.Flush();
