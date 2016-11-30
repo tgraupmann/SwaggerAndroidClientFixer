@@ -234,18 +234,31 @@ namespace SwaggerAndroidClientFixer
                 newContent != null &&
                 !originalContent.Equals(newContent))
             {
-                string tempFile = Directory.GetCurrentDirectory() + Path.PathSeparator + fileInfo.Name;
+                const bool debug = false;
 
-                using (StreamWriter sw = new StreamWriter(tempFile + ".a"))
+                if (debug)
                 {
-                    sw.Write(originalContent);
-                    sw.Flush();
+                    string tempFile = Directory.GetCurrentDirectory() + Path.PathSeparator + fileInfo.Name;
+
+                    using (StreamWriter sw = new StreamWriter(tempFile + ".a"))
+                    {
+                        sw.Write(originalContent);
+                        sw.Flush();
+                    }
+
+                    using (StreamWriter sw = new StreamWriter(tempFile + ".b"))
+                    {
+                        sw.Write(newContent);
+                        sw.Flush();
+                    }
                 }
-
-                using (StreamWriter sw = new StreamWriter(tempFile + ".b"))
+                else
                 {
-                    sw.Write(newContent);
-                    sw.Flush();
+                    using (StreamWriter sw = new StreamWriter(fileInfo.FullName))
+                    {
+                        sw.Write(newContent);
+                        sw.Flush();
+                    }
                 }
             }
 
